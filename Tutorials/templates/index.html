@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Video Streaming</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Add Camera</h1>
+        <form action="/add_camera" method="post">
+            <label for="camera_name">Camera Name:</label>
+            <input type="text" id="camera_name" name="camera_name" required>
+            
+            <label for="video_source">Video Source:</label>
+            <select id="video_source" name="video_source" onchange="toggleInputFields()" required>
+                <option value="/data/video/fall.mp4">FALL</option>
+                <option value="/data/video/ppe.mp4">PPE</option>
+                <option value="/data/video/med_ppe.mp4">MED_PPE</option>
+                <option value="/data/video/brain_tumor.mp4">BRAIN_TUMOR</option>
+                <option value="/data/video/freeway.mp4">FREEWAY</option>
+                <option value='/dev/video'>WEBCAM</option>
+                <option value="RTSP">RTSP</option>
+            </select>
+
+            <!-- RTSP URL input, shown only when RTSP is selected -->
+            <div id="rtsp-url">
+                <label for="rtsp_url">RTSP URL:</label>
+                <input type="text" id="rtsp_url" name="rtsp_url" placeholder="Enter RTSP URL">
+            </div>
+            
+            <!-- Webcam Index input, shown only when WEBCAM is selected -->
+            <div id="webcam-idx">
+                <label for="webcam_idx">WEBCAM INDEX:</label>
+                <input type="text" id="webcam_idx" name="webcam_idx" placeholder="Enter Webcam Index">
+            </div>
+
+            <label for="model">Model:</label>
+            <select id="model" name="model" required>
+                {% for model in model_options %}
+                    <option value="{{ model }}">{{ model }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="runtime">Runtime:</label>
+            <select id="runtime" name="runtime" required>
+                <option value="DSP">DSP</option>
+                <option value="GPU">GPU</option>
+                <option value="CPU">CPU</option>
+            </select>
+            
+            <button type="submit">Add Camera</button>
+        </form>
+    </div>
+
+    <div class="streams-container">
+        {% for name, source in camera_sources.items() %}
+            <div class="camera-container">
+                <h2>{{ name }}</h2>
+                <img src="{{ url_for('video_feed', camera_name=name) }}" alt="{{ name }}">
+                <form action="/delete_camera" method="post" class="delete-form">
+                    <input type="hidden" name="camera_name" value="{{ name }}">
+                    <button type="submit" class="delete-button">✖</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
+
