@@ -66,13 +66,9 @@ if [ ! -f /etc/apt/sources.list.d/ubuntu-qcom-iot-ubuntu-qcom-ppa-noble.list ]; 
     sudo apt-add-repository -y ppa:ubuntu-qcom-iot/qcom-ppa
 fi
 
+sudo apt update
 
 sudo apt install -y libqnn1 libsnpe1 libqnn-dev libsnpe-dev clinfo qcom-adreno1
-
-
-if [ ! -f /usr/lib/libOpenCL.so ]; then
-    sudo ln -s /lib/aarch64-linux-gnu/libOpenCL.so.1.0.0 /usr/lib/libOpenCL.so
-fi
 
 # Install necessary packages
 sudo apt install -y \

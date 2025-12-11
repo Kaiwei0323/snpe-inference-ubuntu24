@@ -5,13 +5,12 @@ import numpy as np
 import time
 
 class BasePipeline:
-    def __init__(self, uri, image_queue, capture_lock):
+    def __init__(self, uri, image_queue):
         self.uri = uri
         self.pipeline = None
         self.bus = None
         self.loop = None
         self.image_queue = image_queue
-        self.capture_lock = capture_lock
         
         self.rate = 1
         
@@ -105,15 +104,14 @@ class BasePipeline:
 
             np_array = np.copy(np_array)
             
-            with self.capture_lock:
-                # Handle queue overflow by dropping the oldest frame
-                if self.image_queue.full():
-                    drop_frame = self.image_queue.get()
-                    # print("Queue full, dropping oldest frame")
+            # Handle queue overflow by dropping the oldest frame
+            if self.image_queue.full():
+                drop_frame = self.image_queue.get()
+                # print("Queue full, dropping oldest frame")
 
-                # Add the new frame to the queue
-                self.image_queue.put(np_array)
-                # print(f"Frame added to queue. Current queue size: {self.image_queue.qsize()}")
+            # Add the new frame to the queue
+            self.image_queue.put(np_array)
+            # print(f"Frame added to queue. Current queue size: {self.image_queue.qsize()}")
 
             return Gst.FlowReturn.OK
         else:

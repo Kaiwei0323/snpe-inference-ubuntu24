@@ -8,8 +8,8 @@ import os
 from .BasePipeline import BasePipeline
 
 class WebcamPipeline(BasePipeline):
-    def __init__(self, uri, image_queue, capture_lock):
-        super().__init__(uri, image_queue, capture_lock)
+    def __init__(self, uri, image_queue):
+        super().__init__(uri, image_queue)
         
         self.v4l2src = Gst.ElementFactory.make("v4l2src", "v4l2src")
         self.capsfilter_h264 = Gst.ElementFactory.make("capsfilter", "capsfilter_h264")

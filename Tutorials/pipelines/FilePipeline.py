@@ -8,8 +8,8 @@ import os
 from .BasePipeline import BasePipeline
 
 class FilePipeline(BasePipeline):
-    def __init__(self, uri, image_queue, capture_lock):
-        super().__init__(uri, image_queue, capture_lock)
+    def __init__(self, uri, image_queue):
+        super().__init__(uri, image_queue)
         
         self.filesrc = Gst.ElementFactory.make("filesrc", "filesrc")
         self.qtdemux = Gst.ElementFactory.make("qtdemux", "qtdemux")

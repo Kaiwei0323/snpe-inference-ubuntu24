@@ -50,10 +50,8 @@ class Camera():
         self.capture_thread = None
         self.display_thread = None
         self.info_thread = None
-        self.display_lock = threading.Lock()
-        self.capture_lock = threading.Lock()
-        self.inference_frame_queue = queue.Queue(maxsize=60)  # Queue to store frames
-        self.capture_frame_queue = queue.Queue(maxsize=60)
+        self.inference_frame_queue = queue.Queue(maxsize=30)  # Queue to store frames
+        self.capture_frame_queue = queue.Queue(maxsize=30)
         self.model_object = self._initialize_model()
         self.vp = None
 
@@ -63,11 +61,11 @@ class Camera():
 
 
         if self.video_source.startswith("/dev/video"):
-            self.vp = WebcamPipeline(video_source, self.capture_frame_queue, self.capture_lock)
+            self.vp = WebcamPipeline(video_source, self.capture_frame_queue)
         elif self.video_source.startswith("rtsp://"):
-            self.vp = RtspPipeline(video_source, self.capture_frame_queue, self.capture_lock)
+            self.vp = RtspPipeline(video_source, self.capture_frame_queue)
         else:
-            self.vp = FilePipeline(video_source, self.capture_frame_queue, self.capture_lock)
+            self.vp = FilePipeline(video_source, self.capture_frame_queue)
             self.vp.set_rate(1)
 
         self.stop_event = threading.Event()
@@ -164,14 +162,14 @@ class Camera():
         """Continuously read frames and perform inference."""
         while not self.stop_event.is_set():  # Check for the stop signal
             curr_time = time.time()
-            #ret, img = self.video.read()
             img = None
-            with self.capture_lock:
-                # print(f"Capture frame queue: {self.capture_frame_queue.qsize()}")
-                if not self.capture_frame_queue.empty():
-                    img = self.capture_frame_queue.get_nowait()
-                    last_frame_time = time.time()
-                self.capture_time = time.time() - curr_time
+            try:
+                img = self.capture_frame_queue.get(timeout=0.05)  # Block until frame available
+                last_frame_time = time.time()
+            except queue.Empty:
+                pass
+            self.capture_time = time.time() - curr_time
+
             if img is None:
                 elapsed_time = time.time() - last_frame_time
                 if self.stop_event.is_set():
@@ -188,62 +186,49 @@ class Camera():
 
             self.frame_counter += 1  # Increment the frame counter
             if self.frame_counter % self.infer_every_n_frames == 0:  # Check if it's the n-th frame
-                with self.display_lock:
-                    inference_start = time.time()
-                    if self.model_object is not None:
-                        processed_frame = self.model_object.inference(img)
-                        if not self.inference_frame_queue.full() and processed_frame is not None and processed_frame.size != 0:
-                            self.inference_frame_queue.put(processed_frame)
-                            # print(f"Display Queue Size: {self.inference_frame_queue.qsize()}")
-                        else:
-                            print("Dropped Inferenced Frame.")
+                inference_start = time.time()
+                if self.model_object is not None:
+                    processed_frame = self.model_object.inference(img)
+                    if not self.inference_frame_queue.full() and processed_frame is not None and processed_frame.size != 0:
+                        self.inference_frame_queue.put(processed_frame)
                     else:
-                        print("Model object is not initialized.")
+                        print("Dropped Inferenced Frame.")
+                else:
+                    print("Model object is not initialized.")
 
-                    inference_end = time.time()
-                    inference_time = inference_end - inference_start
+                inference_time = time.time() - inference_start
 
                     # Update total time and frame count for FPS calculation
-                    frame_count += 1
-                    total_time += inference_time
+                frame_count += 1
+                total_time += inference_time
 
-                    # Calculate and print FPS every second
-                    if frame_count >= 30:  # Update FPS every 30 frames (or another interval)
-                        fps = frame_count / total_time
-                        print(f"FPS: {fps:.2f}")
-                        frame_count = 0
-                        total_time = 0.0  # Reset for the next period
+                # Calculate and print FPS every second
+                if frame_count >= 30:  # Update FPS every 30 frames (or another interval)
+                    fps = frame_count / total_time
+                    print(f"FPS: {fps:.2f}")
+                    frame_count = 0
+                    total_time = 0.0  # Reset for the next period
 
-                    self.inference_time = inference_time
-            else:
-                pass
-                # print(f"Skipped frame {self.frame_counter} (not every {self.infer_every_n_frames} frame)")
-
+                self.inference_time = inference_time
         print("Inference loop ended")
 
     def stop(self):
         """Stop the camera and cleanup."""
-        self.vp.destroy()
         self.stop_event.set()
-        with self.display_lock and self.capture_lock:
-            if self.inference_thread is not None:
-                self.inference_thread.join(timeout=1)  # Wait for the thread to finish
-                self.inference_thread = None
-            if self.capture_thread is not None:
-                self.capture_thread.join(timeout=1)  # Wait for the thread to finish
-                self.capture_thread = None
-            if self.display_thread is not None:
-                self.display_thread.join(timeout=1)  # Wait for the thread to finish
-                self.display_thread = None
-            if self.info_thread is not None:
-                self.info_thread.join(timeout=1)  # Wait for the thread to finish
-                self.info_thread = None
+        self.vp.destroy()
 
-            """
-            if self.video is not None:
-                self.video.release()  # Release the video capture object
-                self.video = None
-            """
+        if self.inference_thread is not None:
+            self.inference_thread.join(timeout=1)
+            self.inference_thread = None
+        if self.capture_thread is not None:
+            self.capture_thread.join(timeout=1)
+            self.capture_thread = None
+        if self.display_thread is not None:
+            self.display_thread.join(timeout=1)
+            self.display_thread = None
+        if self.info_thread is not None:
+            self.info_thread.join(timeout=1)
+            self.info_thread = None
 
     def frames(self):
         """Generate frames from the video source with inference."""
@@ -251,24 +236,20 @@ class Camera():
 
         try:
             while not self.stop_event.is_set():
-                with self.display_lock:
-                    if not self.inference_frame_queue.empty():
-                        display_start_time = time.time()
-                        # Get the frame from the queue
-                        inference_frame = self.inference_frame_queue.get_nowait()
-                        pil_image = Image.fromarray(inference_frame)
-                        pil_image.save(bio, format="jpeg")
-                        yield bio.getvalue()
-                        bio.seek(0)
-                        bio.truncate()
-                        # print(f"Display Time: {time.time() - display_start_time:.4f}s")
-
-                        self.display_time = time.time() - display_start_time
+                try:
+                    display_start_time = time.time()
+                    # Block until frame available (with timeout to check stop_event)
+                    inference_frame = self.inference_frame_queue.get(timeout=0.05)
+                    pil_image = Image.fromarray(inference_frame)
+                    pil_image.save(bio, format="jpeg")
+                    yield bio.getvalue()
+                    bio.seek(0)
+                    bio.truncate()
+                    self.display_time = time.time() - display_start_time
+                except queue.Empty:
+                    continue
 
         finally:
-            # Ensure the video capture object is released only if it's initialized
-            #if self.video is not None:
-            #    self.video.release()
             self.vp.destroy()
 
 
