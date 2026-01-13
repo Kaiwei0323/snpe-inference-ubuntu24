@@ -96,17 +96,6 @@ sudo systemctl enable mosquitto
 sudo python3 -m pip install --break-system-packages torch
 sudo python3 -m pip install --break-system-packages torchvision
 
-# Check if the file exists, then rename it
-if [ -f /etc/kernel/postinst.d/zz-qcom-dtb ]; then
-    echo "Found zz-qcom-dtb, renaming..."
-    sudo mv /etc/kernel/postinst.d/zz-qcom-dtb /etc/kernel/postinst.d/zz-qcom-dtb.bak
-else
-    echo "zz-qcom-dtb not found, skipping rename."
-fi
-
-# Finish dpkg configuration
-sudo dpkg --configure -a
-
 echo "Setup complete!"
 
 sudo reboot
