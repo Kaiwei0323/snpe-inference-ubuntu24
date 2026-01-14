@@ -79,65 +79,68 @@ class BasePipeline:
             print("Pipeline set to NULL (stopped)")
 
     def on_new_sample(self, appsink, data=None):
-        # Callback when a new sample (frame) is available from appsink
+        # Pull the sample from appsink
         sample = self.appsink.pull_sample()
-        if isinstance(sample, Gst.Sample):
-            buffer = sample.get_buffer()
-            caps = sample.get_caps()
-            structure = caps.get_structure(0)
-            
-            # Extract the width, height, and format
-            width = structure.get_value("width")
-            height = structure.get_value("height")
-            format_str = structure.get_value("format")
-            
-            # RGB format has 3 channels
-            channels = 3
-            
-            # Map the buffer properly - handle stride if present
-            success, map_info = buffer.map(Gst.MapFlags.READ)
-            if success:
-                try:
-                    # Get buffer size and check for stride
-                    buffer_size = map_info.size
-                    expected_size = height * width * channels
-                    
-                    # Check if buffer has stride (padding)
-                    if buffer_size > expected_size:
-                        # Buffer has stride - need to copy row by row
-                        stride = buffer_size // height
-                        np_array = np.zeros((height, width, channels), dtype=np.uint8)
-                        
-                        # Copy data row by row, skipping stride padding
-                        for y in range(height):
-                            row_start = y * stride
-                            row_end = row_start + (width * channels)
-                            row_data = bytes(map_info.data[row_start:row_end])
-                            np_array[y] = np.frombuffer(row_data, dtype=np.uint8).reshape(width, channels)
-                    else:
-                        # No stride - direct copy
-                        np_array = np.ndarray(shape=(height, width, channels),
-                                              dtype=np.uint8,
-                                              buffer=map_info.data[:expected_size])
-                        # Make a contiguous copy
-                        np_array = np.ascontiguousarray(np_array.copy())
-                    
-                    # Handle queue overflow by dropping the oldest frame
-                    if self.image_queue.full():
-                        drop_frame = self.image_queue.get()
-                    
-                    # Add the new frame to the queue
-                    self.image_queue.put(np_array)
-                    
-                    return Gst.FlowReturn.OK
-                finally:
-                    buffer.unmap(map_info)
-            else:
-                print("Failed to map buffer")
-                return Gst.FlowReturn.ERROR
-        else:
+        if not isinstance(sample, Gst.Sample):
             print("Failed to get sample")
             return Gst.FlowReturn.ERROR
+
+        buffer = sample.get_buffer()
+        caps = sample.get_caps()
+        structure = caps.get_structure(0)
+
+        # Extract frame info
+        width = structure.get_value("width")
+        height = structure.get_value("height")
+        format_str = structure.get_value("format")
+
+        # Assuming RGB
+        channels = 3
+
+        # Map buffer for reading
+        success, map_info = buffer.map(Gst.MapFlags.READ)
+        if not success:
+            print("Failed to map buffer")
+            return Gst.FlowReturn.ERROR
+
+        try:
+            buffer_size = map_info.size
+            expected_size = height * width * channels
+
+            # Determine stride (bytes per row)
+            if buffer_size > expected_size:
+                # Stride present (padding)
+                stride = buffer_size // height
+            else:
+                # No stride
+                stride = width * channels
+
+            # Create NumPy view using strides (NO Python loops)
+            np_array = np.ndarray(
+                shape=(height, width, channels),
+                dtype=np.uint8,
+                buffer=map_info.data,
+                strides=(stride, channels, 1)
+            )
+
+            # Make a contiguous copy so the data is safe after unmap
+            np_array = np_array.copy()
+
+            # Drop oldest frame if queue is full (low-latency behavior)
+            try:
+                self.image_queue.put_nowait(np_array)
+            except queue.Full:
+                try:
+                    self.image_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                self.image_queue.put_nowait(np_array)
+
+            return Gst.FlowReturn.OK
+
+        finally:
+            buffer.unmap(map_info)
+
 
 
 
