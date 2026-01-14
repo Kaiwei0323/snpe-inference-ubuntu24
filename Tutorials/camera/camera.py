@@ -66,7 +66,6 @@ class Camera():
             self.vp = RtspPipeline(video_source, self.capture_frame_queue)
         else:
             self.vp = FilePipeline(video_source, self.capture_frame_queue)
-            self.vp.set_rate(1)
 
         self.stop_event = threading.Event()
 

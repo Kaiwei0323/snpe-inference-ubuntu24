@@ -20,11 +20,8 @@ class BasePipeline:
         self.capsfilter_nv12.set_property("caps", Gst.Caps.from_string("video/x-raw, format=NV12"))
         self.videoconvert = Gst.ElementFactory.make("qtivtransform", "qtivtransform")
         self.videoconvert.set_property("engine", "fcv")
-        self.videoscale = Gst.ElementFactory.make("videoscale", "videoscale")
         self.capsfilter_rgb = Gst.ElementFactory.make("capsfilter", "capsfilter_rgb")
-        self.capsfilter_rgb.set_property("caps", Gst.Caps.from_string("video/x-raw,format=RGB,width=1280,height=720"))
-        self.videorate = Gst.ElementFactory.make("videorate", "videorate")
-        self.videorate.set_property("rate", self.rate)
+        self.capsfilter_rgb.set_property("caps", Gst.Caps.from_string("video/x-raw,format=RGB"))
         self.appsink = Gst.ElementFactory.make("appsink", "appsink")
         self.appsink.set_property("emit-signals", True)
         self.appsink.set_property("sync", False)
@@ -33,14 +30,11 @@ class BasePipeline:
         self.pipeline = Gst.Pipeline.new(self.uri)
         
         # Check if common elements are created successfully
-        if not all([self.queue, self.capsfilter_nv12, self.videoconvert, self.videoscale, self.capsfilter_rgb, self.videorate, self.appsink]):
+        if not all([self.queue, self.capsfilter_nv12, self.videoconvert, self.capsfilter_rgb, self.appsink]):
             print("Not all common elements could be created")
             return
         
         print("Created all common elements successfully")
-
-    def set_rate(self, rate):
-        self.rate = rate
         
     def on_message(self, bus, message):
         t = message.type
@@ -86,34 +80,61 @@ class BasePipeline:
 
     def on_new_sample(self, appsink, data=None):
         # Callback when a new sample (frame) is available from appsink
-        #sample = self.appsink.emit("pull-sample")
         sample = self.appsink.pull_sample()
         if isinstance(sample, Gst.Sample):
-            buffer = sample.get_buffer()  # Get the buffer from the sample
+            buffer = sample.get_buffer()
             caps = sample.get_caps()
-            # Extract the width, height, and number of channels
-            width = caps.get_structure(0).get_value("width")
-            height = caps.get_structure(0).get_value("height")
-            channels = 3  # RGB format has 3 channels
-
-            # Extract the buffer data into a numpy array
-            buffer_size = buffer.get_size()
-            np_array = np.ndarray(shape=(height, width, channels),
-                                  dtype=np.uint8,
-                                  buffer=buffer.extract_dup(0, buffer_size))
-
-            np_array = np.copy(np_array)
+            structure = caps.get_structure(0)
             
-            # Handle queue overflow by dropping the oldest frame
-            if self.image_queue.full():
-                drop_frame = self.image_queue.get()
-                # print("Queue full, dropping oldest frame")
-
-            # Add the new frame to the queue
-            self.image_queue.put(np_array)
-            # print(f"Frame added to queue. Current queue size: {self.image_queue.qsize()}")
-
-            return Gst.FlowReturn.OK
+            # Extract the width, height, and format
+            width = structure.get_value("width")
+            height = structure.get_value("height")
+            format_str = structure.get_value("format")
+            
+            # RGB format has 3 channels
+            channels = 3
+            
+            # Map the buffer properly - handle stride if present
+            success, map_info = buffer.map(Gst.MapFlags.READ)
+            if success:
+                try:
+                    # Get buffer size and check for stride
+                    buffer_size = map_info.size
+                    expected_size = height * width * channels
+                    
+                    # Check if buffer has stride (padding)
+                    if buffer_size > expected_size:
+                        # Buffer has stride - need to copy row by row
+                        stride = buffer_size // height
+                        np_array = np.zeros((height, width, channels), dtype=np.uint8)
+                        
+                        # Copy data row by row, skipping stride padding
+                        for y in range(height):
+                            row_start = y * stride
+                            row_end = row_start + (width * channels)
+                            row_data = bytes(map_info.data[row_start:row_end])
+                            np_array[y] = np.frombuffer(row_data, dtype=np.uint8).reshape(width, channels)
+                    else:
+                        # No stride - direct copy
+                        np_array = np.ndarray(shape=(height, width, channels),
+                                              dtype=np.uint8,
+                                              buffer=map_info.data[:expected_size])
+                        # Make a contiguous copy
+                        np_array = np.ascontiguousarray(np_array.copy())
+                    
+                    # Handle queue overflow by dropping the oldest frame
+                    if self.image_queue.full():
+                        drop_frame = self.image_queue.get()
+                    
+                    # Add the new frame to the queue
+                    self.image_queue.put(np_array)
+                    
+                    return Gst.FlowReturn.OK
+                finally:
+                    buffer.unmap(map_info)
+            else:
+                print("Failed to map buffer")
+                return Gst.FlowReturn.ERROR
         else:
             print("Failed to get sample")
             return Gst.FlowReturn.ERROR

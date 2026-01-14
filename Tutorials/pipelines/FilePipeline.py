@@ -16,8 +16,6 @@ class FilePipeline(BasePipeline):
         self.queue_demux = Gst.ElementFactory.make("queue", "queue_demux")
         self.h264parse = Gst.ElementFactory.make("h264parse", "h264parse")
         self.decoder = Gst.ElementFactory.make("v4l2h264dec", "decoder")  # Hardware
-        
-        self.rate = 1
 
         # Check if elements were created successfully
         if not all([self.filesrc, self.qtdemux, self.queue_demux, self.h264parse, self.decoder]):
@@ -36,7 +34,7 @@ class FilePipeline(BasePipeline):
         elements = [
             self.filesrc, self.qtdemux, self.queue_demux, self.h264parse,
             self.decoder, self.queue, self.capsfilter_nv12, self.videoconvert,
-            self.capsfilter_rgb, self.videoscale, self.videorate, self.appsink
+            self.capsfilter_rgb, self.appsink
         ]
         
         # Link the elements together
@@ -57,9 +55,7 @@ class FilePipeline(BasePipeline):
         self.queue.link(self.capsfilter_nv12)
         self.capsfilter_nv12.link(self.videoconvert)
         self.videoconvert.link(self.capsfilter_rgb)
-        self.capsfilter_rgb.link(self.videoscale)
-        self.videoscale.link(self.videorate)
-        self.videorate.link(self.appsink)
+        self.capsfilter_rgb.link(self.appsink)
 
         # Setup bus
         self.bus = self.pipeline.get_bus()

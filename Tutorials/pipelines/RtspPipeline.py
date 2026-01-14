@@ -34,7 +34,7 @@ class RtspPipeline(BasePipeline):
         elements = [
             self.rtspsrc, self.depay, self.h264parse,
             self.decoder, self.queue, self.capsfilter_nv12, self.videoconvert,
-            self.capsfilter_rgb, self.videoscale, self.videorate, self.appsink
+            self.capsfilter_rgb, self.appsink
         ]
         
         # Link the elements together
@@ -51,9 +51,7 @@ class RtspPipeline(BasePipeline):
         self.queue.link(self.capsfilter_nv12)
         self.capsfilter_nv12.link(self.videoconvert)
         self.videoconvert.link(self.capsfilter_rgb)
-        self.capsfilter_rgb.link(self.videoscale)
-        self.videoscale.link(self.videorate)
-        self.videorate.link(self.appsink)
+        self.capsfilter_rgb.link(self.appsink)
 
         # Setup bus
         self.bus = self.pipeline.get_bus()
