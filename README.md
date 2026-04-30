@@ -147,14 +147,14 @@ You have two methods to convert your model into `.dlc` format:
 - Refer to the Application User Manual for detailed instructions on converting your model to `.dlc` format:  
   [User Manual](https://github.com/Kaiwei0323/qc_model_conversion_flask)
 
----
-
 #### Method 2: Command-line Conversion (Advanced users)
 
 - Use the SNPE Model Conversion CLI tool:
   https://github.com/Kaiwei0323/SNPE_Model_Conversion
 
 - Follow the instructions in the repository to convert models directly via terminal commands.
+
+---
 
 ### 2. Visualize Your Model
 * After conversion, use the Model Visualization tab on the website to visualize your model.
