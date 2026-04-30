@@ -132,17 +132,34 @@ mosquitto_sub -h localhost -t detr/detections -v
 ---
 
 ## Deploy your own model
+
 ### 1. Convert Your Model to .dlc Format
-* Visit our Model Conversion website: [Model Conversion Website](http://99.64.152.69:5000/). 
-* Go to **Model Conversion** Tab.
-* Refer to the Application User Manual Section for detailed instructions on how to convert your model to the .dlc format: [User Manual](https://github.com/Kaiwei0323/qc_model_conversion_flask).
+
+You have two methods to convert your model into `.dlc` format:
+
+#### Method 1: Web-based Conversion (Recommended for beginners)
+
+- Visit our Model Conversion website:  
+  [Model Conversion Website](http://99.64.152.69:5000/)
+
+- Go to the **Model Conversion** tab.
+
+- Refer to the Application User Manual for detailed instructions on converting your model to `.dlc` format:  
+  [User Manual](https://github.com/Kaiwei0323/qc_model_conversion_flask)
+
+---
+
+#### Method 2: Command-line Conversion (Advanced users)
+
+- Use the SNPE Model Conversion CLI tool:
+  https://github.com/Kaiwei0323/SNPE_Model_Conversion
+
+- Follow the instructions in the repository to convert models directly via terminal commands.
 
 ### 2. Visualize Your Model
 * After conversion, use the Model Visualization tab on the website to visualize your model.
 * Find and note the input layer and output layer names of your model.
 ![Screenshot from 2025-03-06 21-44-16](https://github.com/user-attachments/assets/45f9f79c-5a94-4171-8b1b-c22c67806705)
-
-
 
 ### 3. Add Your Model to the Project
 * Place your .dlc model file in the SNPE_Flask/Tutorials/models/ folder.
