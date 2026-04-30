@@ -1,0 +1,60 @@
+Logging started for program DebugLog on host ubuntu at Thu Apr 30 2026 19:04:23.558725 (this log file is /home/ubuntu/Documents/SNPE_Flask/Tutorials/dbglogs/DebugLog.03.txt)
+19:04:23.647524432 [INFO:DEBUGLOG] DEFAULT:0 (:0) Initialize: DebugLog initialized.
+19:04:23.648086051 [USER_INFO:DNN_RUNTIME] DEFAULT:1 Checking signed PD session
+19:04:23.648094644 [INFO:DNN_RUNTIME] DEFAULT:2 (:0) Attempting to open statically linked lib: libSnpeHtp
+19:04:23.648098030 [INFO:DNN_RUNTIME] DEFAULT:3 (:0) Found Interface Provider (v2.19)
+19:04:23.648099020 [INFO:DNN_RUNTIME] DEFAULT:4 (:0) Found Interface Provider (v2.19)
+19:04:23.648099592 [INFO:DNN_RUNTIME] DEFAULT:5 (:0) Found Interface Provider (v2.19)
+19:04:23.648109072 [USER_INFO:DNN_RUNTIME] DEFAULT:6 QnnDsp <I> QnnHtpLog_create started.
+19:04:23.648135166 [USER_WARNING:DNN_RUNTIME] DEFAULT:7 QnnDsp <W> Initializing HtpProvider
+19:04:23.648579804 [USER_INFO:DNN_RUNTIME] DEFAULT:8 QnnDsp <I> exit with 0
+19:04:23.648581054 [USER_INFO:DNN_RUNTIME] DEFAULT:9 QnnDsp <I> exit with 0
+19:04:23.650389244 [USER_INFO:DNN_RUNTIME] DEFAULT:10 QnnDsp <I> First connection to QNN stub established!
+19:04:23.650493360 [USER_INFO:DNN_RUNTIME] DEFAULT:11 QnnDsp <I> Applying log level 3 to 0 devices
+19:04:23.650497474 [USER_WARNING:DNN_RUNTIME] DEFAULT:12 QnnDsp <W> Function not called, PrepareLib isn't loaded!
+19:04:23.650499505 [USER_INFO:DNN_RUNTIME] DEFAULT:13 QnnDsp <I> QnnHtpLog_create exit.
+19:04:23.650531745 [USER_INFO:DNN_RUNTIME] DEFAULT:14 QnnDsp <I> QnnHtpBackend_create started. backend = 0xae0c9240
+19:04:23.650619350 [USER_INFO:DNN_RUNTIME] DEFAULT:15 QnnDsp <I> QnnHtpBackend_create done successfully. backend = 0xae0c9240
+19:04:23.650625704 [USER_INFO:DNN_RUNTIME] DEFAULT:16 QnnDsp <I> QnnHtpDevice_getPlatformInfo started.
+19:04:23.650627996 [USER_INFO:DNN_RUNTIME] DEFAULT:17 QnnDsp <I> QnnHtpDevice_getPlatformInfo done. status 0x0
+19:04:23.650635600 [USER_INFO:DNN_RUNTIME] DEFAULT:18 QnnDsp <I> QnnHtpDevice_create started
+19:04:23.650645496 [USER_WARNING:DNN_RUNTIME] DEFAULT:19 QnnDsp <W> HTP arch will be deprecated, please set SoC id instead.
+19:04:23.650674507 [USER_INFO:DNN_RUNTIME] DEFAULT:20 QnnDsp <I> exits with 2, successfully initialized rpc memory
+19:04:23.650678153 [USER_INFO:DNN_RUNTIME] DEFAULT:21 QnnDsp <I> rpcMemoryAlloc 8 isInit 1
+19:04:23.650801174 [USER_INFO:DNN_RUNTIME] DEFAULT:22 QnnDsp <I> rpcMemoryAlloc 136 isInit 1
+19:04:23.682547444 [USER_ERROR:DNN_RUNTIME] DEFAULT:23 QnnDsp <E> DspTransport.openSession qnn_open failed, 0x80000600
+19:04:23.682551298 [USER_ERROR:DNN_RUNTIME] DEFAULT:24 QnnDsp <E> DspTransport failed,cannot open session, error 0x0000000f
+19:04:23.682559996 [USER_ERROR:DNN_RUNTIME] DEFAULT:25 QnnDsp <E> Error from rpc transport. transportStatus = 15
+19:04:23.682562756 [USER_ERROR:DNN_RUNTIME] DEFAULT:26 QnnDsp <E> Failed to retrieve skel build id: err: 1003
+19:04:23.682664424 [USER_ERROR:DNN_RUNTIME] DEFAULT:27 QnnDsp <E> Failed to create transport for device, error: 4000
+19:04:23.682666195 [USER_ERROR:DNN_RUNTIME] DEFAULT:28 QnnDsp <E> Failed to load skel, error: 4000
+19:04:23.682669059 [USER_ERROR:DNN_RUNTIME] DEFAULT:29 QnnDsp <E> Transport layer setup failed: 14001
+19:04:23.682677340 [USER_ERROR:DNN_RUNTIME] DEFAULT:30 QnnDsp <E> Failed to parse default platform info: 14001
+19:04:23.682679580 [USER_ERROR:DNN_RUNTIME] DEFAULT:31 QnnDsp <E> Failed to parse platform config: 14001
+19:04:23.682689997 [USER_INFO:DNN_RUNTIME] DEFAULT:32 QnnDsp <I> QnnHtpDevice_create done. status 0x36b1
+19:04:23.682745101 [USER_ERROR:DNN_RUNTIME] DEFAULT:33 error code = 15001; QnnBackend_DeviceCreate() failed; QNN_DEVICE_ERROR_INVALID_CONFIG: Invalid config values
+19:04:23.682932394 [USER_INFO:DNN_RUNTIME] DEFAULT:34 Checking signed PD session
+19:04:23.682943957 [USER_INFO:DNN_RUNTIME] DEFAULT:35 QnnDsp <I> QnnHtpBackend_create started. backend = 0xae0c9240
+19:04:23.683037603 [USER_INFO:DNN_RUNTIME] DEFAULT:36 QnnDsp <I> QnnHtpBackend_create done successfully. backend = 0xae0c9240
+19:04:23.683046301 [USER_INFO:DNN_RUNTIME] DEFAULT:37 QnnDsp <I> QnnHtpDevice_getPlatformInfo started.
+19:04:23.683048333 [USER_INFO:DNN_RUNTIME] DEFAULT:38 QnnDsp <I> QnnHtpDevice_getPlatformInfo done. status 0x0
+19:04:23.683053541 [USER_INFO:DNN_RUNTIME] DEFAULT:39 QnnDsp <I> QnnHtpDevice_create started
+19:04:23.683064791 [USER_WARNING:DNN_RUNTIME] DEFAULT:40 QnnDsp <W> HTP arch will be deprecated, please set SoC id instead.
+19:04:23.683091041 [USER_INFO:DNN_RUNTIME] DEFAULT:41 QnnDsp <I> exits with 2, successfully initialized rpc memory
+19:04:23.683094375 [USER_INFO:DNN_RUNTIME] DEFAULT:42 QnnDsp <I> rpcMemoryAlloc 8 isInit 1
+19:04:23.683179323 [USER_INFO:DNN_RUNTIME] DEFAULT:43 QnnDsp <I> rpcMemoryAlloc 136 isInit 1
+19:04:23.706208707 [USER_ERROR:DNN_RUNTIME] DEFAULT:44 QnnDsp <E> DspTransport.openSession qnn_open failed, 0x80000600
+19:04:23.706214436 [USER_ERROR:DNN_RUNTIME] DEFAULT:45 QnnDsp <E> DspTransport failed,cannot open session, error 0x0000000f
+19:04:23.706224593 [USER_ERROR:DNN_RUNTIME] DEFAULT:46 QnnDsp <E> Error from rpc transport. transportStatus = 15
+19:04:23.706228291 [USER_ERROR:DNN_RUNTIME] DEFAULT:47 QnnDsp <E> Failed to retrieve skel build id: err: 1003
+19:04:23.706337562 [USER_ERROR:DNN_RUNTIME] DEFAULT:48 QnnDsp <E> Failed to create transport for device, error: 4000
+19:04:23.706342614 [USER_ERROR:DNN_RUNTIME] DEFAULT:49 QnnDsp <E> Failed to load skel, error: 4000
+19:04:23.706348969 [USER_ERROR:DNN_RUNTIME] DEFAULT:50 QnnDsp <E> Transport layer setup failed: 14001
+19:04:23.706359490 [USER_ERROR:DNN_RUNTIME] DEFAULT:51 QnnDsp <E> Failed to parse default platform info: 14001
+19:04:23.706364281 [USER_ERROR:DNN_RUNTIME] DEFAULT:52 QnnDsp <E> Failed to parse platform config: 14001
+19:04:23.706379490 [USER_INFO:DNN_RUNTIME] DEFAULT:53 QnnDsp <I> QnnHtpDevice_create done. status 0x36b1
+19:04:23.706409490 [USER_ERROR:DNN_RUNTIME] DEFAULT:54 error code = 15001; QnnBackend_DeviceCreate() failed; QNN_DEVICE_ERROR_INVALID_CONFIG: Invalid config values
+19:04:23.706706367 [USER_WARNING:DNN_RUNTIME] DEFAULT:55 QnnDsp <W> Backend 2 free cleanup called during process exit
+19:04:23.706722305 [USER_WARNING:DNN_RUNTIME] DEFAULT:56 QnnDsp <W> qnnOpPackageManager: hexagon unload op package function pointer is nullptr!
+19:04:23.708116794 [INFO:DEBUGLOG] DEFAULT:57 (:0) DebugLog shutting down.
+Logging stopped at Thu Apr 30 2026 19:04:23.735008

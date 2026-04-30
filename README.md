@@ -57,8 +57,8 @@ Documents/
 
 ### 1. Clone the Project
 ```bash
-cd /home/aim/Documents
-git clone https://github.com/Kaiwei0323/SNPE_Flask.git -b 24.04
+cd ~/Documents
+git clone https://github.com/Kaiwei0323/snpe-inference-ubuntu24.git -b SNPE_Flask
 ```
 
 ---
@@ -83,16 +83,6 @@ cd SNPE_Flask/Tutorials
 ### 5. Run Application
 ```bash
 python3 app.py
-```
-
-### Debug (DSP Runtime not Available)
-```
-sudo mv /etc/kernel/postinst.d/zz-qcom-dtb /etc/kernel/postinst.d/zz-qcom-dtb.bak
-
-
-sudo dpkg --configure -a
-
-sudo reboot
 ```
 
 ---
