@@ -135,24 +135,8 @@ mosquitto_sub -h localhost -t detr/detections -v
 
 ### 1. Convert Your Model to .dlc Format
 
-You have two methods to convert your model into `.dlc` format:
-
-#### Method 1: Web-based Conversion (Recommended for beginners)
-
-- Visit our Model Conversion website:  
-  [Model Conversion Website](http://99.64.152.69:5000/)
-
-- Go to the **Model Conversion** tab.
-
-- Refer to the Application User Manual for detailed instructions on converting your model to `.dlc` format:  
-  [User Manual](https://github.com/Kaiwei0323/qc_model_conversion_flask)
-
-#### Method 2: Command-line Conversion (Advanced users)
-
-- Use the SNPE Model Conversion CLI tool:
-  https://github.com/Kaiwei0323/SNPE_Model_Conversion
-
-- Follow the instructions in the repository to convert models directly via terminal commands.
+Follow this repository to convert your model:  
+[Qualcomm Model Conversion](https://github.com/Kaiwei0323/qualcomm-model-conversion)
 
 ---
 
