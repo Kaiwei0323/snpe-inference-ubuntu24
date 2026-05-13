@@ -78,6 +78,11 @@ cd SNPE_Flask/Tutorials
 > 🔍 `setup.sh` installs dependencies, sets up SNPE paths, and configures the environment for Flask + SNPE.
 > Restart the terminal
 
+```bash
+source ~/.bashrc
+```
+> Activate the environment variables
+
 ---
 
 ### 5. Run Application
@@ -151,7 +156,7 @@ Follow this repository to convert your model:
 * Update the __init__.py file inside myclasses/
 
 ### 4. Modify the camera.py File
-* Open the SNPE_Flask/Tutorials/camera.py file.
+* Open the SNPE_Flask/Tutorials/camera/camera.py file.
 * Modify the model_map (lines 24-35) to include your new model. This will ensure that the application can recognize and use your model.
 * In the example above, add **"YOLOV8S_DSP": ("models/yolov8s_encode_int8.dlc", ["images"], ["/model.22/Concat_5"], ["output0"], COCO80_CLASSES)** to the model_map.
 
