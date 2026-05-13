@@ -22,7 +22,16 @@ set (PYBIND11_INCLUDE_DIR "${PYTHON_BASE_DIR}/lib/python3/dist-packages/pybind11
 set(CMAKE_CXX_STANDARD 17)
 
 message("Linking with LE1.0 SNPE")
-get_filename_component(SNPE_LIB_PATH "${SNPE_LIB_PREFIX}/aarch64-${_dtuple_POSTFIX}/libSNPE.so" REALPATH BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+# Prefer Ubuntu libsnpe1 (/usr/lib/libSNPE.so): its version must match the
+# Hexagon skels in /usr/lib/rfsa/adsp. Linking the 2.26 SDK host library
+# against 2.43 DSP skels causes setTargetRuntime to fall back to CPU.
+if(EXISTS "/usr/lib/libSNPE.so")
+	get_filename_component(SNPE_LIB_PATH "/usr/lib/libSNPE.so" REALPATH)
+	message(STATUS "Using system libSNPE at ${SNPE_LIB_PATH} (libsnpe1 / DSP skel compatible)")
+else()
+	get_filename_component(SNPE_LIB_PATH "${SNPE_LIB_PREFIX}/aarch64-${_dtuple_POSTFIX}/libSNPE.so" REALPATH BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+	message(STATUS "Using SDK libSNPE at ${SNPE_LIB_PATH}")
+endif()
 get_filename_component(SNPE_HTP_PATH "${SNPE_LIB_PREFIX}/aarch64-${_dtuple_POSTFIX}/libSnpeHtpPrepare.so" REALPATH BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(CHIPSET STREQUAL "QCS8550")
@@ -51,3 +60,9 @@ add_library(${APP} MODULE ${APP_SOURCES})
 #target_compile_definitions(${APP} PUBLIC -DDEBUG)
 
 target_link_libraries (${APP} PUBLIC SNPE)
+# At runtime, resolve libSNPE.so from /usr/lib first (system skel handshake).
+set_target_properties(${APP} PROPERTIES
+	BUILD_RPATH "/usr/lib"
+	INSTALL_RPATH "/usr/lib"
+	BUILD_WITH_INSTALL_RPATH TRUE
+)

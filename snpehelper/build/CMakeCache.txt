@@ -215,6 +215,9 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//No help, variable specified on the command line.
+SNPE_LIB_PATH_OVERRIDE:UNINITIALIZED=/usr/lib/libSNPE.so
+
 //Value Computed by CMake
 snpehelper_BINARY_DIR:STATIC=/home/ubuntu/Documents/SNPE_Flask/snpehelper/build
 

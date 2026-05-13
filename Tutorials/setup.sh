@@ -161,8 +161,9 @@ sudo apt update || warn "apt update reported errors"
 # Standard Ubuntu archive packages first - these are always available and
 # include pip/flask/mosquitto plus the QRTR/cDSP plumbing for SNPE DSP.
 apt_install "standard Ubuntu packages" \
+    build-essential \
     snpe-tools \
-    python3-pip python3-venv python3-pybind11 cmake \
+    python3-pip python3-venv python3-pybind11 python3-dev cmake \
     python3-flask python3-opencv python3-paho-mqtt \
     mosquitto mosquitto-clients \
     tqftpserv rmtfs
@@ -260,7 +261,31 @@ sudo systemctl restart cdsp-rehandshake.service \
     || warn "Failed to run cdsp-rehandshake now"
 
 # =============================================================================
-#                            8. PyTorch (pip)
+#        8. libsnpehelper.so (host libSNPE must match Hexagon skel version)
+# =============================================================================
+# Prebuilt libsnpehelper.so may be linked against the 2.26 SDK under /data/sdk.
+# Ubuntu libsnpe1 provides /usr/lib/libSNPE.so and DSP skels under
+# /usr/lib/rfsa/adsp — a 2.26/2.43 mismatch causes silent CPU fallback.
+section "libsnpehelper rebuild (link to system libSNPE)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+HELPER_SRC="$REPO_ROOT/snpehelper"
+HELPER_BUILD="$HELPER_SRC/build"
+HELPER_DST="$SCRIPT_DIR/snpe/libsnpehelper.so"
+if [ -f "/usr/lib/libSNPE.so" ] && [ -f "$HELPER_SRC/CMakeLists.txt" ]; then
+    mkdir -p "$HELPER_BUILD"
+    if (cd "$HELPER_BUILD" && cmake .. && cmake --build . -j"$(nproc)"); then
+        cp -f "$HELPER_BUILD/libsnpehelper.so" "$HELPER_DST" \
+            && echo "  Installed $HELPER_DST (linked for system libSNPE / DSP)"
+    else
+        warn "libsnpehelper rebuild failed; copy a matching libsnpehelper.so manually"
+    fi
+else
+    echo "  Skipping libsnpehelper rebuild (need /usr/lib/libSNPE.so and $HELPER_SRC)"
+fi
+
+# =============================================================================
+#                            9. PyTorch (pip)
 # =============================================================================
 section "PyTorch"
 if python3 -m pip --version >/dev/null 2>&1; then

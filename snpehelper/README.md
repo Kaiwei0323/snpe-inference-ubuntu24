@@ -1,23 +1,30 @@
-# Build snpehelper
-## 1. Enter Admin Mode
-Open a terminal and switch to admin mode:
-```
-su
-oelinux
-```
-## 2. Remove Old Build and Compile
-Run the following commands to remove the old build, create a new build folder, and compile:
-```
-rm -r build
-mkdir build
-cd build
-cmake ..
-make
-```
-This will generate libsnpehelper.so in build folder.
+# Build libsnpehelper
 
-## 3. Move libsnpehelper.so to the Tutorials Folder
+The resulting `libsnpehelper.so` must load the same **host** `libSNPE.so` major version as the **Hexagon skels** under `/usr/lib/rfsa/adsp` (from the `libsnpe1` package on QCS6490 Ubuntu). If you link against an older SDK under `/data/sdk/...`, SNPE may report `setTargetRuntime: Selected runtime not present` and fall back to CPU.
+
+CMake prefers `/usr/lib/libSNPE.so` when that file exists; otherwise it uses `SNPE_ROOT` in `CMakeLists.txt`.
+
+## Build
+
+From this directory:
+
+```bash
+rm -rf build && mkdir build && cd build
+cmake ..
+cmake --build . -j"$(nproc)"
 ```
-mv libsnpehelper.so ../Tutorials/
+
+This produces `build/libsnpehelper.so`.
+
+## Install into the Flask tutorial
+
+```bash
+cp -f build/libsnpehelper.so ../Tutorials/snpe/libsnpehelper.so
 ```
-Now, libsnpehelper.so is ready for use in the Tutorials folder. 🚀
+
+On-device, `Tutorials/setup.sh` runs this rebuild automatically after `libsnpe1` is installed.
+
+## Dependencies
+
+- `cmake`, `build-essential`, `python3-dev`, `python3-pybind11`
+- SNPE C++ headers under `SNPE_ROOT/include/SNPE` (default: tree under `/data/sdk/...` in `CMakeLists.txt`)
