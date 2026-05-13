@@ -1,1 +1,0 @@
-/home/ubuntu/Documents/SNPE_Flask/Tutorials/dbglogs/DebugLog.04.txt

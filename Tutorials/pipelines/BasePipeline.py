@@ -1,5 +1,8 @@
 import gi
 import queue as Q
+
+gi.require_version("Gst", "1.0")
+gi.require_version("GstApp", "1.0")
 from gi.repository import Gst, GstApp, GLib
 import numpy as np
 import time
@@ -129,12 +132,15 @@ class BasePipeline:
             # Drop oldest frame if queue is full (low-latency behavior)
             try:
                 self.image_queue.put_nowait(np_array)
-            except queue.Full:
+            except Q.Full:
                 try:
                     self.image_queue.get_nowait()
-                except queue.Empty:
+                except Q.Empty:
                     pass
-                self.image_queue.put_nowait(np_array)
+                try:
+                    self.image_queue.put_nowait(np_array)
+                except Q.Full:
+                    pass
 
             return Gst.FlowReturn.OK
 
