@@ -146,7 +146,7 @@ Follow this repository to convert your model:
 ---
 
 ### 2. Visualize Your Model
-* After conversion, use the Model Visualization tab on the website to visualize your model.
+* After conversion, use **snpe-dlc-info** to visualize your model.
 * Find and note the input layer and output layer names of your model.
 ![Screenshot from 2025-03-06 21-44-16](https://github.com/user-attachments/assets/45f9f79c-5a94-4171-8b1b-c22c67806705)
 
