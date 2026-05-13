@@ -76,12 +76,6 @@ cd SNPE_Flask/Tutorials
 ```
 
 > 🔍 `setup.sh` installs dependencies, sets up SNPE paths, and configures the environment for Flask + SNPE.
-> Restart the terminal
-
-```bash
-source ~/.bashrc
-```
-> Activate the environment variables
 
 ---
 
