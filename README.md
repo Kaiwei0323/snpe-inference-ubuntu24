@@ -58,7 +58,7 @@ Documents/
 ### 1. Clone the Project
 ```bash
 cd ~/Documents
-git clone https://github.com/Kaiwei0323/snpe-inference-ubuntu24.git -b SNPE_Flask
+git clone https://github.com/Kaiwei0323/snpe-inference-ubuntu24.git SNPE_Flask
 ```
 
 ---
