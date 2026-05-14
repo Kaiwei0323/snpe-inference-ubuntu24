@@ -1,5 +1,6 @@
 import gi
 import queue as Q
+import threading
 
 gi.require_version("Gst", "1.0")
 gi.require_version("GstApp", "1.0")
@@ -14,7 +15,8 @@ class BasePipeline:
         self.bus = None
         self.loop = None
         self.image_queue = image_queue
-        
+        self._reconnect_lock = threading.Lock()
+
         self.rate = 1
         
         # Common Elements
@@ -28,6 +30,8 @@ class BasePipeline:
         self.appsink = Gst.ElementFactory.make("appsink", "appsink")
         self.appsink.set_property("emit-signals", True)
         self.appsink.set_property("sync", False)
+        self.appsink.set_property("max-buffers", 1)
+        self.appsink.set_property("drop", True)
         self.appsink.connect("new-sample", self.on_new_sample)
         
         self.pipeline = Gst.Pipeline.new(self.uri)
@@ -59,10 +63,13 @@ class BasePipeline:
                 self.pipeline.set_state(Gst.State.PLAYING)
 
     def reconnect(self):
-        print("Reconnecting pipeline...")
-        if self.pipeline:
+        """Best-effort pipeline recovery; safe from bus thread or inference thread."""
+        with self._reconnect_lock:
+            if not self.pipeline:
+                return
+            print("Reconnecting pipeline (READY → PLAYING)...")
             self.pipeline.set_state(Gst.State.READY)
-            time.sleep(1)
+            time.sleep(0.2)
             self.pipeline.set_state(Gst.State.PLAYING)
         
     def start(self):

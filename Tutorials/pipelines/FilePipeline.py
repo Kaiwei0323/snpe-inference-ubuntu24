@@ -81,3 +81,23 @@ class FilePipeline(BasePipeline):
                     print("Failed to link qtdemux pad")
         else:
             print(f"Skipping non-video pad: {media_type}")
+
+    def reconnect(self):
+        """After EOS or stall, rewind file to t=0 instead of READY/PLAYING only (which often stays at EOS)."""
+        with self._reconnect_lock:
+            if not self.pipeline:
+                return
+            print("FilePipeline: reconnect (seek to start)...")
+            self.pipeline.set_state(Gst.State.PAUSED)
+            ok = self.pipeline.seek_simple(
+                Gst.Format.TIME,
+                Gst.SeekFlags.FLUSH | Gst.SeekFlags.KEY_UNIT,
+                0,
+            )
+            if not ok:
+                print("FilePipeline: seek to 0 failed, falling back to generic reconnect")
+                self.pipeline.set_state(Gst.State.READY)
+                time.sleep(0.2)
+                self.pipeline.set_state(Gst.State.PLAYING)
+            else:
+                self.pipeline.set_state(Gst.State.PLAYING)

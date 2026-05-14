@@ -154,7 +154,10 @@ class Camera():
 
     def start_inference(self):
         last_frame_time = time.time()
-        reconnect_threshold = 5
+        stall_threshold_s = 5.0
+        reconnect_cooldown_s = 2.0
+        last_reconnect_time = 0.0
+        consecutive_stall_reconnects = 0
 
         frame_count = 0
         total_time = 0.0
@@ -165,6 +168,8 @@ class Camera():
             try:
                 img = self.capture_frame_queue.get(timeout=0.05)  # Block until frame available
                 last_frame_time = time.time()
+                consecutive_stall_reconnects = 0
+                reconnect_cooldown_s = 2.0
             except queue.Empty:
                 pass
             self.capture_time = time.time() - curr_time
@@ -173,15 +178,21 @@ class Camera():
                 elapsed_time = time.time() - last_frame_time
                 if self.stop_event.is_set():
                     break
-                else:
-                    if elapsed_time > reconnect_threshold:
-                        print(f"Unable to grab frame for {elapsed_time:.2f} seconds, reconnecting...")
-                        # Call the reconnect method here
-                        self.vp.reconnect()
-                        last_frame_time = time.time()  # Reset the time after reconnect
-                    else:
-                        # print("Failed to grab a valid frame.")
-                        continue
+                if elapsed_time <= stall_threshold_s:
+                    continue
+                now = time.time()
+                if now - last_reconnect_time < reconnect_cooldown_s:
+                    continue
+                consecutive_stall_reconnects += 1
+                print(
+                    f"No frame for {elapsed_time:.1f}s (stall #{consecutive_stall_reconnects}), "
+                    f"reconnecting after {reconnect_cooldown_s:.1f}s cooldown..."
+                )
+                self.vp.reconnect()
+                last_reconnect_time = now
+                last_frame_time = now
+                reconnect_cooldown_s = min(reconnect_cooldown_s * 1.7, 45.0)
+                continue
 
             self.frame_counter += 1  # Increment the frame counter
             if self.frame_counter % self.infer_every_n_frames == 0:  # Check if it's the n-th frame

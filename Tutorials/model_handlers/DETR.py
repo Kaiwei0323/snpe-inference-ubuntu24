@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 import torch
 import torchvision.transforms as T
+from torchvision.transforms import InterpolationMode
 from PIL import Image
 from snpe import PerfProfile, Runtime, SnpeContext
 import time
@@ -44,21 +45,25 @@ class DETR(SnpeContext):
                  enable_cache: bool = False):
         super().__init__(dlc_path, input_layers, output_layers, output_tensors, runtime, profile_level, enable_cache)
         self.classes = classes
+        # Built once: recreating Compose every frame was a major CPU cost.
+        self._pil_to_tensor = T.Compose([
+            T.Resize(800, interpolation=InterpolationMode.BILINEAR, antialias=True),
+            T.ToTensor(),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
 
     def preprocess(self, frame):
         """Preprocess the input frame for the DETR model."""
         if frame is None or frame.size == 0:
             print("Received an empty frame for preprocessing.")
             return
-        # Convert frame to PIL image
-        image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        transform = T.Compose([
-            T.Resize(800),  # Resize image
-            T.ToTensor(),   # Convert to tensor
-            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])  # Normalize
-        ])
-        img = transform(image).unsqueeze(0)
-        out = torch.nn.functional.interpolate(img, size=(480, 480), mode='bicubic', align_corners=False)
+        # GStreamer caps are RGB (video/x-raw format=RGB); skip BGR swap.
+        image = Image.fromarray(frame)
+        img = self._pil_to_tensor(image).unsqueeze(0)
+        # Bilinear is much faster than bicubic with negligible change for int8 DETR.
+        out = torch.nn.functional.interpolate(
+            img, size=(480, 480), mode="bilinear", align_corners=False
+        )
         input_image = out.numpy().transpose(0, 2, 3, 1).astype(np.float32)[0].flatten()
         self.SetInputBuffer(input_image, self.m_input_layers[0])
 
@@ -71,9 +76,8 @@ class DETR(SnpeContext):
         prob = self.GetOutputBuffer(self.m_output_tensors[0]).reshape(1, 100, len(self.classes))
         boxes = self.GetOutputBuffer(self.m_output_tensors[1]).reshape(1, 100, 4)
 
-        # Convert outputs to tensors
-        tensor_prob = torch.from_numpy(prob)
-        tensor_boxes = torch.from_numpy(boxes)
+        tensor_prob = torch.as_tensor(prob)
+        tensor_boxes = torch.as_tensor(boxes)
         
         frame_h, frame_w = frame.shape[:2]
         probas = tensor_prob.softmax(-1)[0, :, :-1]
@@ -83,8 +87,7 @@ class DETR(SnpeContext):
         bboxes_scaled = self.rescale_bboxes(tensor_boxes[0, keep], (frame_h, frame_w))
 
         if keep.sum() == 0:
-            print("No boxes kept after thresholding.")
-            return frame  # Return original frame if no boxes are kept
+            return frame
 
         # Draw bounding boxes and labels on the frame
         for p, (xmin, ymin, xmax, ymax) in zip(probas[keep], bboxes_scaled.tolist()):
@@ -147,11 +150,11 @@ class DETR(SnpeContext):
         
     def inference(self, frame):
         """Run inference on the frame and return the processed frame."""
-        start_time = time.time()
-        self.preprocess(frame)
-        self.execute()
-        frame = self.postprocess(frame, start_time)
-       
+        with torch.inference_mode():
+            start_time = time.time()
+            self.preprocess(frame)
+            self.execute()
+            frame = self.postprocess(frame, start_time)
         return frame
 
     def execute(self):

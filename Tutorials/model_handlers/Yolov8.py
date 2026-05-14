@@ -44,25 +44,23 @@ class YOLOV8(SnpeContext):
                  enable_cache: bool = False):
         super().__init__(dlc_path, input_layers, output_layers, output_tensors, runtime, profile_level, enable_cache)
         self.classes = classes
+        self._to_model = T.Compose([
+            T.ToTensor(),
+            T.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0]),
+        ])
 
     def preprocess(self, image):
         """Preprocess the image for YOLOv8 model."""
         if image is None or image.size == 0:
             print("Received an empty frame for preprocessing.")
             return
-        
-        
-        # If image is already the required shape, no need to resize
+
         if image.shape[:2] != (640, 640):
-            image = cv2.resize(image, (640, 640))  # Resize to 640x640 only if necessary
-            
-        image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-            
-        transform = T.Compose([
-            T.ToTensor(),          # Convert to tensor
-            T.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0])  # Normalize
-        ])
-        img = transform(image).unsqueeze(0).numpy().transpose(0, 2, 3, 1).astype(np.float32).flatten()
+            image = cv2.resize(image, (640, 640), interpolation=cv2.INTER_LINEAR)
+
+        # Pipeline frames are RGB (GStreamer caps); avoid BGR round-trip.
+        pil = Image.fromarray(image)
+        img = self._to_model(pil).unsqueeze(0).numpy().transpose(0, 2, 3, 1).astype(np.float32).flatten()
         self.SetInputBuffer(img, self.m_input_layers[0])
 
     def calcIoU(self, ObjectDataA, ObjectDataB):
@@ -235,15 +233,14 @@ class YOLOV8(SnpeContext):
     def inference(self, frame):
         """Run inference on the frame and return the processed frame."""
         try:
-            start_time = time.time()
-            self.preprocess(frame)  # Assuming preprocess is defined
-            
-            execute_start_time = time.time()
-            self.execute()  # Assuming execute is defined
-            
-            postprocess_start_time = time.time()
-            frame = self.postprocess(frame, start_time)  # Assuming postprocess is defined
-            
+            with torch.inference_mode():
+                start_time = time.time()
+                self.preprocess(frame)  # Assuming preprocess is defined
+
+                self.execute()  # Assuming execute is defined
+
+                frame = self.postprocess(frame, start_time)  # Assuming postprocess is defined
+
             return frame
         except Exception as e:
             print(f"Inference Error: {e}")

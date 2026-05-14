@@ -79,3 +79,13 @@ class RtspPipeline(BasePipeline):
                     print("Failed to link rtph264depay")
         else:
             print(f"Skipping non-video pad: {media_type}")
+
+    def reconnect(self):
+        """RTSP: READY→PLAYING often does not recover; tear down to NULL then restart."""
+        with self._reconnect_lock:
+            if not self.pipeline:
+                return
+            print("RtspPipeline: reconnect (NULL → PLAYING)...")
+            self.pipeline.set_state(Gst.State.NULL)
+            time.sleep(0.3)
+            self.pipeline.set_state(Gst.State.PLAYING)
